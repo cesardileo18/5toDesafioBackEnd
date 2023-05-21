@@ -1,0 +1,73 @@
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="http://localhost:8080/bootstrap/css/bootstrap.min.css">
+  <title> Products</title>
+  <link rel="stylesheet" href="http://localhost:8080/css/style.css" />
+</head>
+<main class="px-3">
+  <h1>Lista de Productos</h1>
+  <div id="productList"></div>
+</main>
+<script src="http://localhost:8080/bootstrap/js/jquery.js"></script>
+<script src="http://localhost:8080/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  // Escuchar el evento 'productList' y actualizar la lista de productos status
+  socket.on('productList', products => {
+    const productList = document.getElementById("productList");
+    productList.innerHTML = "";
+    function generarTabla(products) {
+      // Verificar si los elementos de datos tienen las propiedades "status" y "thumbnails"
+      const tieneStatus = products.every((elemento) => "status" in elemento);
+      const tieneThumbnails = products.every((elemento) => "thumbnails" in elemento);
+
+      // Agregar las propiedades "status" y "thumbnails" a los elementos que no las tienen
+      if (!tieneStatus) {
+        products.forEach((elemento) => {
+          if (!("status" in elemento)) {
+            elemento.status = "Sin datos";
+          }
+        });
+      }
+      // Agregar las propiedades "status" y "thumbnails" a los elementos que no las tienen
+      if (!tieneThumbnails) {
+        products.forEach((elemento) => {
+          if (!("thumbnails" in elemento)) {
+            elemento.thumbnails = "Sin datos";
+          }
+        });
+      }
+      const tabla = document.createElement('table');
+      tabla.className = "table table-responsive table-hover"
+      // Crear encabezado de la tabla
+      const encabezado = document.createElement('thead');
+      const encabezadoFila = document.createElement('tr');
+      const encabezadoColumnas = Object.keys(products[0]);
+      encabezadoColumnas.forEach(columna => {
+        const th = document.createElement('th');
+        th.textContent = columna;
+        encabezadoFila.appendChild(th);
+      });
+      encabezado.appendChild(encabezadoFila);
+      tabla.appendChild(encabezado);
+      // Crear cuerpo de la tabla
+      const cuerpoTabla = document.createElement('tbody');
+      products.forEach(producto => {
+        const fila = document.createElement('tr');
+        for (const prop in producto) {
+          let celda = document.createElement('td');
+          celda.textContent = producto[prop];
+          fila.appendChild(celda);
+        }
+        cuerpoTabla.appendChild(fila);
+      });
+      tabla.appendChild(cuerpoTabla);
+      return tabla;
+    }
+    const tablaProductos = generarTabla(products);
+    productList.appendChild(tablaProductos);
+  })
+</script>
